@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<head>
+<title>Yahoo Weather API</title>
+
+<!-- link to the google free web font "Raleway" -->
+<link href='http://fonts.googleapis.com/css?family=Raleway:400,100' rel='stylesheet' type='text/css'>
+
+<!-- Here comes the CSS style -->
+<style type="text/css">
+
+/*We define the style of our button, with the ID "#button" */
+#bouton{
+color: #999;
+text-shadow: -1px -1px 2px white, 1px 1px 2px #333;
+font-size: 20px;
+background-color: #fff;
+border-width: 0px;
+box-shadow: inset 0 0 5px 2px #999;
+border-radius: 10px;
+width: 300px;
+height: 100px;
+
+}
+
+/*We define the style of our button when active (if I click on it) */
+#bouton:active{
+color: #999;
+text-shadow: -1px -1px 2px white, 1px 1px 2px #333;
+font-size: 20px;
+background-color: #fff;
+border-width: 0px;
+box-shadow: inset 0 0 8px 5px #555;
+border-radius: 10px;
+width: 300px;
+height: 100px;
+
+
+}
+
+/*We define the style of our text zone, with the ID "#blabla" */
+#blabla{
+color: black;
+/*we specify that we want to use Raleway as a font for our text */
+font-family: Raleway, sans-serif;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<!--loading the jquery javascript library from googleapis.com -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<!--here come some javascript inside the html -->
+<script type="text/javascript">
+
+
+
+var cityUrl=""; // URL of the API to obtain the forecast for our city
+var city; // name of our city 
+var idCity=""; // id number of our city
+var weather; // Description of the weather (the result of our query)
+
+
+$(document).ready(function(){ // if my page is loaded
+
+
+var getContent= function(){ // function "getContent" perform the search for the city and its corresponding forecast
+
+city = $("#city").val(); //get the value of the text input #city
+
+cityUrl="http://query.yahooapis.com/v1/public/yql?q=select%20woeid%20from%20geo.places%20where%20text%3D%22"+city+"%22&format=json&diagnostics=true&callback=";  // url to get the Woeid corresponding to the city (A WOEID (Where on Earth IDentifier) is a unique 32 bit reference identifier assigned by Yahoo! to identify any feature on Earth.
+
+
+$("#blabla").empty(); // empty the text zone
+
+// ajax call to perform the query to the Yahoo API
+  $.ajax({datatype: "json",  // specify the data structure returned (XML, json or Jsonp)
+    	url: cityUrl, // url to the yahoo Woeid search API we defined previously
+    	success: function(data) { // if the query is successful, return datas as a json object
+
+		$.each(data.query.results.place,function (i, datas){ // jquery function similar to a loop
+
+		try{ // try
+		idCity=	data.query.results.place[0].woeid; // if we get multiples results for one city (e.g. Paris, Texas or Paris, Ile de France), Choose the first result
+
+		}catch (err){ // catch error and continue
+		
+		idCity=data.query.results.place.woeid; // if we got only one result, ok, let's go !
+
+		}
+	
+
+		});
+		console.log(idCity); // print in console the Woeid of the city
+
+
+// ajax call to perform the query to the Yahoo Weather API
+	$.ajax({
+		datatype: "json",  // specify the data structure returned (XML, json or Jsonp)
+    	url: "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D"+idCity+"&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", // url to the yahoo Weather API + the Woeid we get previously
+    	success: function(data) { // if the query is successful, return datas as a json object
+    		console.log(data); // print in console the raw Json Datas 
+		weather=data.query.results.channel.item.forecast[0].text; // localize and get the data corresponding to the forecast in the Json array
+		$("#blabla").empty(); 
+		$("#blabla").append("<br>"+city+"</br><br>"+weather+"</br>"); // add in the #blabla text zone the name of the city + the forecast
+	}
+	});
+	}
+	});
+
+
+	
+
+
+
+}
+	
+
+$("#bouton").click(getContent); // if I click on the button "#bouton", launch the function "getContent"
+
+
+});
+
+
+
+
+</script>
+<br>
+<!-- display our text input and assign it an ID-->
+<input id="city" type="text" size="55px" placeholder="Enter name of a city"> </input>
+</br><br>
+
+<!-- display our bouton and assign it an ID-->
+<button id="bouton">Click Me</button>
+</br>
+<!-- display our text zone and assign it an ID-->
+<div id="blabla"><br>Rien</br></div>
+
+</body>
+
+
+
+
+
+
+
+</html>
